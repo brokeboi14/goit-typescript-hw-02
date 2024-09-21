@@ -1,0 +1,29 @@
+
+:root {
+  background-color: #222629;
+  --default-text-color: #fafafa;
+  --text-color2: #9b9fa1;
+  --default-accent-color: rgba(182, 50, 194, 0.502);
+  --default-accent-hover-color: rgb(89, 47, 137);
+  max-width: 1440px;
+  padding: 60px 16px 16px;
+  margin: 0 auto;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #515457;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--default-accent-hover-color);
+  border: 1px solid #517524;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--default-accent-color);
+}
