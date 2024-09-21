@@ -5,14 +5,21 @@ import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
 import ImageGallery from './components/ImageGallery/ImageGallery';
 import ImageModal from './components/ImageModal/ImageModal';
 import toast from 'react-hot-toast';
-import getImages from './js/images-api'
-
+import getImages, { Image, UnsplashResponse } from './api/images-api'
 import { useState, useEffect, useRef } from 'react';
-
 import './App.css';
 
+interface ModalState {
+  modalIsOpen: boolean;
+  srcUrl: string;
+  altDescription: string;
+  authorName: string;
+  likes: string;
+  largeDescription?: string;
+}
+
 function App() {
-  const MODAL_INITIAL_STATE = {
+  const MODAL_INITIAL_STATE: ModalState = {
     modalIsOpen: false,
     srcUrl: '',
     altDescription: '',
@@ -21,38 +28,38 @@ function App() {
     largeDescription: '',
   };
 
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
-  const [modalState, setModalState] = useState(MODAL_INITIAL_STATE);
-  const mainElem = useRef();
+  const [query, setQuery] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [images, setImages] = useState<Image[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+  const [showLoadMoreBtn, setShowLoadMoreBtn] = useState<boolean>(false);
+  const [modalState, setModalState] = useState<ModalState>(MODAL_INITIAL_STATE);
+  const mainElem = useRef<HTMLDivElement>(null);
 
-  const handleSearch = newQuery => {
+  const handleSearch = (newQuery: string) => {
     setQuery(newQuery);
     setPage(1);
     setImages([]);
   };
 
   const handleLoadMoreBtn = () => {
-    setPage(page + 1);
+    setPage(prevPage => prevPage + 1);
   };
 
   const handleModalOpen = (
-    srcUrl,
-    altDescription,
-    authorName,
-    likes,
-    largeDescription,
+    srcUrl: string,
+    altDescription: string,
+    authorName: string,
+    likes: number,
+    largeDescription?: string,
   ) => {
     setModalState({
       modalIsOpen: true,
       srcUrl,
       altDescription,
       authorName,
-      likes,
+      likes: likes.toString(),
       largeDescription,
     });
   };
@@ -62,34 +69,40 @@ function App() {
   };
 
   useEffect(() => {
-    async function getImagesData() {
+    const getImagesData = async () => {
+      setLoading(true);
+      setError(false);
+
+      if (!query) {
+        setShowLoadMoreBtn(false);
+        setLoading(false);
+        return;
+      }
+
       try {
-        setError(false);
-        if (query === '') {
-          setShowLoadMoreBtn(false);
-          return;
-        }
-        setLoading(true);
-        const data = await getImages(query, page);
+        const data: UnsplashResponse = await getImages(query, page);
         if (data.total === 0) {
           setShowLoadMoreBtn(false);
-          toast('There are no results!');
+          toast.error('There are no results!');
           return;
         }
+
         setImages(prevImages => [...prevImages, ...data.results]);
-        setShowLoadMoreBtn(data.total_pages !== page);
+        setShowLoadMoreBtn(data.total_pages > page);
       } catch (error) {
         setError(true);
+        toast.error('An error occurred while fetching images.');
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     getImagesData();
   }, [query, page]);
 
   useEffect(() => {
     if (page === 1) return;
-    mainElem.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    mainElem.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [images, page]);
 
   return (
